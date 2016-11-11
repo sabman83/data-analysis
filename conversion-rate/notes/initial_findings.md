@@ -35,6 +35,10 @@
 
 - Except for SEO all other columns show significance. 
 - The error on the training data (all of the data) is 1.381404 % which is slightly better then the null classifier of 3.225%
+ - With validation error rate on test data is 1.386161%. About the same.
+ - With 10 K fold and prob > 0.7, test error rate is .8854895 %
+ - Feature Selection
+  -- Lasso gives non-zero coefficients for new_user1 and total_pages_visited
 
 
 *Recommendations*
