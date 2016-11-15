@@ -11,7 +11,7 @@ table(glm.pred,conversion_rate_table$converted)
 mean(glm.pred == conversion_rate_table$converted) #0.013811
 
 #validation set
-test <- sample(nrow(conversion_rate_table),nrow(conversion_rate_table)/3)
+test <- sample(nrow(conversion_rate_table), 2 * (nrow(conversion_rate_table)/3))
 glm.train.fit <- glm(converted ~ ., data = conversion_rate_table, subset = -test, family = binomial)
 summary(glm.train.fit)
 glm.test.probs <- predict(glm.train.fit, newdata = conversion_rate_table[test,], type = "response")

@@ -29,9 +29,9 @@
  - If user has visited less than a number of pages then add more enticing pages? Or if has visited more then ignore user?
 
 
-*Analysis*
+#Analysis
 
-**Logistic Regression**
+##Logistic Regression
 
 - Except for SEO all other columns show significance. 
 - The error on the training data (all of the data) is 1.381404 % which is slightly better then the null classifier of 3.225%
@@ -40,6 +40,9 @@
  - Feature Selection
   -- Lasso gives non-zero coefficients for new_user1 and total_pages_visited
 
+##Random Forests
+- Total pages visited is most important
+- Error rate is slightly worse at 1.46%
 
 *Recommendations*
 
