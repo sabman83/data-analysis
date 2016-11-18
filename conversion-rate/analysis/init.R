@@ -1,5 +1,5 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(data.table, ggplot2, boot, dplyr, leaps, glmnet, tree, randomForest)
+pacman::p_load(data.table, ggplot2, boot, dplyr, leaps, glmnet, rpart, randomForest)
 
 
 setwd("./conversion-rate/")

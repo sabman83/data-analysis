@@ -43,6 +43,11 @@
 ##Random Forests
 - Total pages visited is most important
 - Error rate is slightly worse at 1.46%
+- Total pages visted is most important. Since it is dominating so much we can ignore it and look at other variables. Also, people browse many pages because they already want to buy. 
+- on Redoing it with total pages removed, and giving class weight of 0.7, 03 , we get new_users as most important and source as least, error rate went up by 14 % but we are trying to get insights into important factors
+- Parital dependence plots say that, users from China have perform poorly on conversion rate while Germany does best. Old users have a better chance at converting. Users younger than 30 and older than 60 have a better chance of converting, source has no effect.
+- Plottig simple tree confirms above hypothesis on age and countries
+
 
 *Recommendations*
 
