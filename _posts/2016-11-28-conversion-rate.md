@@ -1,4 +1,8 @@
-#Conversion Rate
+---
+layout: post
+title: Conversion Rate
+tags: [random-forests, logistic-regression]
+---
 
 ##Challenge Description
 
