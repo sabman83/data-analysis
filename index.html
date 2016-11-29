@@ -21,7 +21,7 @@ subtitle: A repository of datasets analyzed and visualized
       Posted on {{ post.date | date: "%B %-d, %Y" }}
     </p>
 
-    <div class="post-entry">
+    <!--<div class="post-entry">
       {{ post.excerpt | strip_html | xml_escape | truncatewords: site.excerpt_length }}
       {% assign excerpt_word_count = post.excerpt | number_of_words %}
       {% if post.content != post.excerpt or excerpt_word_count > site.excerpt_length %}
@@ -41,7 +41,7 @@ subtitle: A repository of datasets analyzed and visualized
       {% endif %}
     </div>
     {% endif %}
-
+    -->
    </article>
   {% endfor %}
 </div>
