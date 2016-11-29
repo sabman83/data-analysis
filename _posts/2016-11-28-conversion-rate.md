@@ -21,8 +21,8 @@ Columns:
 * _age_ : user age. Self-reported at sign-in step
 * _new\_user_ : whether the user created the account during this session or had already an account and simply came back to the site
 * _source_ : marketing channel source
-* _Ads_: came to the site by clicking on an advertisement
-* _Seo_: came to the site by clicking on search results
-* _Direct_: came to the site by directly typing the URL on the browser
+  * _Ads_: came to the site by clicking on an advertisement
+  * _Seo_: came to the site by clicking on search results
+  * _Direct_: came to the site by directly typing the URL on the browser
 * _total\_pages\_visited_: number of total pages visited during the session. This is a proxy for time spent on site and engagement during the session.
 * _converted_: this is our label. 1 means they converted within the session, 0 means they left without buying anything. The company goal is to increase conversion rate: # conversions / total sessions.
