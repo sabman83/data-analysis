@@ -13,7 +13,7 @@ Predict conversion rate
 Come up with recommendations for the product team and the marketing team to improve conversion rate
 
 ## Data
-The data is available [here](/conversion-rate/data/conversion_data.csv). 
+The data is available [here](https://github.com/sabman83/data-analysis/blob/gh-pages/conversion-rate/data/conversion_data.csv). 
 
 Columns:
 
