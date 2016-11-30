@@ -10,10 +10,7 @@ conversion_rate_table$converted <- as.factor(conversion_rate_table$converted)
 summary(conversion_rate_table)
 
 
-ggplot(conversion_rate_table, aes(x = age, y = total_pages_visited)) 
-      + geom_point(aes(color = factor(converted))) 
-      + geom_vline(xintercept = 61, color = "red")
-
+ggplot(conversion_rate_table, aes(x = age, y = total_pages_visited)) + geom_point(aes(color = factor(converted))) + geom_vline(xintercept = 61, color = "red") + labs(x="Age", y = "Total Pages Visited", color="Converted (1 = True)") + ggtitle("Total Pages Visted vs Age")
 ggplot(converted_users, aes(x = age, y = source)) 
       + geom_point(aes(color = total_pages_visited)) co
 
