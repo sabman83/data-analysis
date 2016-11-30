@@ -10,15 +10,16 @@ conversion_rate_table$converted <- as.factor(conversion_rate_table$converted)
 summary(conversion_rate_table)
 
 
-ggplot(conversion_rate_table, aes(x = age, y = total_pages_visited)) 
-      + geom_point(aes(color = factor(converted))) 
-      + geom_vline(xintercept = 61, color = "red")
+ggplot(conversion_rate_table, aes(x = age, y = total_pages_visited))
++ geom_point(aes(color = factor(converted)))
++ geom_vline(xintercept = 61, color = "black")
++ labs(x="Age", y = "Total Pages Visited", color="Converted (1 = True)")
++ ggtitle("Total Pages Visited vs Age") + theme(plot.title = element_text(face = "bold"))
 
-ggplot(converted_users, aes(x = age, y = source)) 
-      + geom_point(aes(color = total_pages_visited)) co
+ggplot(conversion_rate_table, aes(x = age, y = source))
++ geom_point(aes(color = factor(converted)))
++ labs(x="Age", y = "Source", color="Converted (1 = True)")
++ ggtitle("Source vs Age")
++ theme(plot.title = element_text(face = "bold"))
 
-ggplot(converted_users, aes(x = age, y = source)) 
-      + geom_point(aes(color = factor(new_user))) 
-
-ggplot(conversion_rate_table, aes(x = age, y = country)) + geom_point(aes(color = factor(converted)))
-ggplot(converted_users, aes(x = age, y = country)) + geom_point(aes(color = factor(converted)))
+qplot(conversion_rate_table$age, geom = "histogram", binwidth=.5, bins=20, col=I("red"), fill=I("red"), alpha = I(.5), xlim = c(10,80), xlab = "Age", ylab = "Count", main = "Histogram of Age", breaks=seq(10,80, by = 5))
