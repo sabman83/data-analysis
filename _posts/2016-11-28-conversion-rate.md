@@ -282,4 +282,134 @@ The error is slight worse over our previous models but the model now only has 2 
 The negative coefficient for _new\_user1_ (1 indicating the dummy column for _new\_user_=1) suggests that new users are less likely to convert. Also, the user is more likely to convert if he/she has visited more pages.
 
 
+**Decision Trees**
 
+Decision trees are a better way to communicate a predictive model to the marketing team. We will build a random forest and verify the importance of the variables.
+
+~~~ r
+> rf.model <- randomForest(y=conversion_rate_table[train,]$converted,
+  x=conversion_rate_table[train,1:5, with=FALSE,],
+  ytest = conversion_rate_table[-train,]$converted,
+  xtest = conversion_rate_table[-train,1:5, with=FALSE],
+  ntree=100, mtry=3, importance = TRUE, keep.forest = TRUE)
+
+> rf.model
+
+Call:
+ randomForest(x = conversion_rate_table[train, 1:5, with = FALSE,      ], y = conversion_rate_table[train, ]$converted, xtest = conversion_rate_table[-train,      1:5, with = FALSE], ytest = conversion_rate_table[-train,      ]$converted, ntree = 100, mtry = 3, importance = TRUE, keep.forest = TRUE)
+               Type of random forest: classification
+                     Number of trees: 100
+No. of variables tried at each split: 3
+
+        OOB estimate of  error rate: 1.46%
+Confusion matrix:
+       0    1 class.error
+0 203098  898 0.004402047
+1   2189 4613 0.321817113
+                Test set error rate: 1.44%
+Confusion matrix:
+       0    1 class.error
+0 101556  448 0.004391985
+1   1073 2323 0.315959953
+
+> varImpPlot(rf.model)
+~~~
+
+
+![Random Forest Model 1](/data-analysis/assets/conversion-rate-rf-model-1.png)
+
+The OOB error rate is 1.44% which is an improvement over our logistic regression models. From the variable importance plots, it is clear that _total\_visited\_pages_ is most important.
+
+Now, one could make the argument that total pages visited is not as valuable since an user converting will likely visit more pages anyway. Since there is a huge difference between *total_pages_visited* and other columns in the charts, I will rebuild the random forest model excluding that column to identify other important columns.
+
+I also use class weights to give preference to converted data since we comparatively fewer converted data.
+
+~~~ r
+> rf_model_2 <- randomForest(y=conversion_rate_table[train,]$converted,
+  x=conversion_rate_table[train,1:4, with=FALSE,],
+  ytest = conversion_rate_table[-train,]$converted,
+  xtest = conversion_rate_table[-train,1:4, with=FALSE],
+  ntree=100, mtry=3, importance = TRUE, keep.forest = TRUE, classwt = c(0.7,0.3))
+
+> rf_model_2
+
+Call:
+ randomForest(x = conversion_rate_table[train, 1:4, with = FALSE,      ], y = conversion_rate_table[train, ]$converted, xtest = conversion_rate_table[-train,      1:4, with = FALSE], ytest = conversion_rate_table[-train,      ]$converted, ntree = 100, mtry = 3, classwt = c(0.7, 0.3),      importance = TRUE, keep.forest = TRUE)
+               Type of random forest: classification
+                     Number of trees: 100
+No. of variables tried at each split: 3
+
+        OOB estimate of  error rate: 14.09%
+Confusion matrix:
+       0     1 class.error
+0 177407 26589   0.1303408
+1   3103  3699   0.4561894
+                Test set error rate: 14.02%
+Confusion matrix:
+      0     1 class.error
+0 88793 13211   0.1295145
+1  1570  1826   0.4623086
+
+varImpPlot(rf_model_2)
+
+~~~
+
+
+![Random Forest Model 2](/data-analysis/assets/conversion-rate-rf-model-2.png)
+
+As expected, *new_user* is the next important variable followed by *age* and *country*. Source doesn't seem to be important at all.
+
+The error rate is worse but I am only interested in importance of variables.
+
+We now plot the partial dependence plots for each of these variables to understand the influence of thier values.
+
+~~~ r
+
+> par(mfrow=c(2, 2))
+> partialPlot(rf_model_2, conversion_rate_table[train,], country, 1)
+>
+> partialPlot(rf_model_2, conversion_rate_table[train,], new_user, 1)
+> partialPlot(rf_model_2, conversion_rate_table[train,], age, 1)
+>
+> partialPlot(rf_model_2, conversion_rate_table[train,], source, 1)
+
+~~~
+
+
+![Partial Dependence Plots](/data-analysis/assets/conversion-rate-dependence-plots.png)
+
+*Notes:*
+
+* Users from Germany have a better conversion rate over other countries. Users from China have the worst conversion rates.
+* Old users convert more than new users.
+* Users roughly between the age group of 20 to 25 are more likely to convert. Users between 55 to 60 seem to do okay. But the conversion rate is very poor for those in between.
+
+
+We now build a simple decision tree to confirm some of the observations above and visualize them.
+
+~~~ r
+> tree.model <- rpart(conversion_rate_table$converted~.,
+  data = conversion_rate_table[,1:4,with=FALSE],
+  control = rpart.control(maxdepth = 3),
+  parms = list(prior = c(0.7,0.3)))
+
+> rpart.plot(tree.model, type = 4, extra = 0)
+~~~
+
+![Partial Dependence Plots](/data-analysis/assets/conversion-rate-decision-tree.png)
+
+The decision tree confirms our findings from random forests.
+
+## Recommendations
+
+Based on the analysis, I can recommend the following for the marketing team.
+
+* Users from China have very poor conversion rate. The site must do better to target these users and come up with content/features to appeal to the Chinese users. We should also investigate if we are lacking in internationalization features for China.
+
+* While the younger users do fine, we seem to be losing the older users. We need to identify the causes and improve our site convert the older users. Are older users converting less because the UX is not intuitive?
+
+* Older accounts have a better conversion rate. We can target the new users with promotional emails and ad campaigns to drive them more towards our site.
+
+* If user has visited many pages and hasn't converted yet then we should use similar targeting features and influence them to convert.
+
+* Users from Germany and younger users do very well on out site and we should target ad campaigns to attract younger users and new users from Germany.
