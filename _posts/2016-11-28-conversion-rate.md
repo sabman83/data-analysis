@@ -4,15 +4,29 @@ title: Conversion Rate
 tags: [random-forests, logistic-regression]
 ---
 
-## Challenge Description
+## Contents
+---
+
+* [Problem Description](#problem-description)
+* [Data](#data)
+* [Exploring the data](#exploring-the-data)
+* [Analyzing the data](#analyzing-the-data)
+* [Recommendations](#recommendations)
+
+
+## Problem Description
+---
 
 We have data about users who hit our site: whether they converted or not as well as some of their characteristics such as their country, the marketing channel, their age, whether they are repeat users and the number of pages visited during that session (as a proxy for site activity/time spent on site).
 
 **Goals:**
-Predict conversion rate
-Come up with recommendations for the product team and the marketing team to improve conversion rate
+
+* Predict conversion rate
+* Come up with recommendations for the product team and the marketing team to improve conversion rate
 
 ## Data
+---
+
 The data is available [here](https://github.com/sabman83/data-analysis/raw/gh-pages/conversion-rate/data/conversion_data.csv){:target="_blank"}.
 
 Columns:
@@ -28,6 +42,7 @@ Columns:
 * _converted_: this is our label. 1 means they converted within the session, 0 means they left without buying anything. The company goal is to increase conversion rate: # conversions / total sessions.
 
 ## Exploring the data
+---
 
 I import the data from the csv file and store it in a data table. Besides the performance benefits, I also like data.table for its cleaner syntax especially when it comes to using the filters. I also convert the new_user and converted columns from numeric to factor.
 
@@ -49,7 +64,7 @@ summary(conversion_rate_table)
 |                |  Max.   :123.00 |           |                |  Max.   :29.000     |          |
 
 
-**Notes from summary**
+**Notes**
 
 * I notice that age has a maximum value of 123, This suggests that there might be some errors in the data.
 * There no NA values, so we don't have to deal with empty values.
@@ -133,6 +148,7 @@ Majority of the users are between the age group of 20 to 40.
 
 
 ## Analyzing the data
+---
 
 Before analyzing the data, I remove the outliers.
 
@@ -416,6 +432,7 @@ We now build a simple decision tree to confirm some of the observations above an
 The decision tree confirms our findings from random forests.
 
 ## Recommendations
+---
 
 Based on the analysis, I can recommend the following for the marketing team.
 
@@ -428,3 +445,6 @@ Based on the analysis, I can recommend the following for the marketing team.
 * If user has visited many pages and hasn't converted yet then we should use similar targeting features and influence them to convert.
 
 * Users from Germany and younger users do very well on out site and we should target ad campaigns to attract younger users and new users from Germany.
+
+
+[Go to Top](#challenge-description)
