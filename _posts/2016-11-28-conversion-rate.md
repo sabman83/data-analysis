@@ -99,8 +99,23 @@ ggplot(conversion_rate_table, aes(x = age, y = country))
 
 ![Country vs Age](/data-analysis/assets/country-vs-age.png)
 
-Again, country doesn't seem to have any correlation with age. China has very few converted users.
+Again, country doesn't seem to have any correlation with age. China doesn't seem to have any converted users. Let's verify this by grouping the data by countries and calculating the conversion rate for each country
 
+~~~ r
+> conversion_rate_by_country <- conversion_rate_table %>%
+  group_by(country) %>%
+  summarise(conversion_rate = mean(converted))
+>
+> ggplot(data = conversion_rate_by_country, aes(x=country, y=conversion_rate))
+  + geom_bar(stat = "identity", aes(fill=country))
+  + labs(x="Country", y = "Conversion Rate")
+  + ggtitle("Conversion Rate by Country")
+  + theme(plot.title = element_text(face = "bold"))
+~~~
+
+![Conversion Rate by Country](/data-analysis/assets/conversion-rate-by-country.png)
+
+China users does show some conversion but it is worst compared to other countries.
 
 **Histogram of Age**
 
