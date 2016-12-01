@@ -1,7 +1,3 @@
-#remove outliers
-conversion_rate_table <- data.table(filter(conversion_rate_table, age < 80))
-
-
 glm.model <- glm(converted~.,data = conversion_rate_table, family = binomial)
 summary(glm.fit)
 glm.probs = predict(glm.model, type="response")
