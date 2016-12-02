@@ -17,7 +17,7 @@ tags: [random-forests, logistic-regression]
 ## Problem Description
 ---
 
-We have data about users who hit our site: whether they converted or not as well as some of their characteristics such as their country, the marketing channel, their age, whether they are repeat users and the number of pages visited during that session (as a proxy for site activity/time spent on site).
+The data contains information about users browsing a paritcular site. It contains information like whether they converted and other characteristics such as their country, the marketing channel, their age, whether they are repeat users and the number of pages visited during that session.
 
 **Goals:**
 
@@ -31,8 +31,8 @@ The data is available [here](https://github.com/sabman83/data-analysis/raw/gh-pa
 
 Columns:
 
-* _country_ : user country based on the IP address
-* _age_ : user age. Self-reported at sign-in step
+* _country_ : user's country based on the IP address
+* _age_ : user's age. Self-reported at sign-in step
 * _new\_user_ : whether the user created the account during this session or had already an account and simply came back to the site
 * _source_ : marketing channel source
   * _Ads_: came to the site by clicking on an advertisement
@@ -44,7 +44,7 @@ Columns:
 ## Exploring the data
 ---
 
-I import the data from the csv file and store it in a data table. Besides the performance benefits, I also like data.table for its cleaner syntax especially when it comes to using the filters. I also convert the new_user and converted columns from numeric to factor.
+I import the data from the csv file and store it in a [data table](https://github.com/Rdatatable/data.table/wiki){:target="_blank"}. Besides the performance benefits, I also like data.table for its cleaner syntax especially when it comes to using the filters with piping. I also convert the *new_user* and *converted* columns from numeric to factor.
 
 ~~~ r
 conversion_rate_data <- read.csv("data/conversion_data.csv")
@@ -66,14 +66,21 @@ summary(conversion_rate_table)
 
 **Notes**
 
-* I notice that age has a maximum value of 123, This suggests that there might be some errors in the data.
+* I notice that age has a maximum value of 123. This suggests that there might be some errors in the data.
 * There no NA values, so we don't have to deal with empty values.
-* The percentage of converted users  = (10200 / nrow(conversion_rate_table)) * 100 = 3.22%. So for a null classifier that predicts all users as non-converters, the error rate would be 3.22%.
+* The percentage of converted users is 3.22% .
 
-I will now plot some visualizations to get a sense of the data and it's distribution.
+~~~ r
+> (nrow(filter(conversion_rate_table, converted==1)) /
+   nrow(conversion_rate_table)) * 100
+[1] 3.225806
+~~~
+So for a classifier that predicts all users as non-converters, the error rate would be 3.22%. The classes are heavily unbalanced.
+
+I will now plot some visualizations to get a sense of the data and its distribution.
 
 
-**Total Pages Visited vs Age**
+### Total Pages Visited vs Age
 
 ~~~ r
 ggplot(conversion_rate_table, aes(x = age, y = total_pages_visited))
@@ -85,24 +92,21 @@ ggplot(conversion_rate_table, aes(x = age, y = total_pages_visited))
 
 ![Total Pages Visted vs Age](/data-analysis/assets/pages-visited-vs-age.png)
 
-There are two outliers having an age of over 100. We can safely assume that this is incorrect data and ignore them. Also, I notice that beyond a certain age all the users converted. This age threshold is marked by the vertical line at 61.
-Users who have visited 20 or more pages also defintely converted.
-
-**Source vs Age**
+There are two outliers having an age of over 100. We can safely assume that this is incorrect data and ignore them.
+Also, I notice that beyond a certain age all the users converted. This age threshold is marked by the vertical line at 61.
 
 ~~~ r
-ggplot(conversion_rate_table, aes(x = age, y = source))
-  + geom_point(aes(color = factor(converted)))
-  + labs(x="Age", y = "Source", color="Converted (1 = True)")
-  + ggtitle("Source vs Age")
-  + theme(plot.title = element_text(face = "bold"))
+> nrow(filter(conversion_rate_table, converted==1, age>61, age<100))
+[1] 0
 ~~~
 
-![Source vs Age](/data-analysis/assets/source-vs-age.png)
+Users who have visited 20 or more pages also defintely converted.
 
-There doesn't seem to be any correlation between source and age and nor does source seem to have any affect on conversion. But we will confirm this using regression later.
+~~~ r
+nrow(filter(conversion_rate_table, converted==0, total_pages_visited>20))
+~~~
 
-**Country vs Age**
+### Country vs Age
 
 ~~~ r
 ggplot(conversion_rate_table, aes(x = age, y = country))
@@ -114,7 +118,7 @@ ggplot(conversion_rate_table, aes(x = age, y = country))
 
 ![Country vs Age](/data-analysis/assets/country-vs-age.png)
 
-Again, country doesn't seem to have any correlation with age. China doesn't seem to have any converted users. Let's verify this by grouping the data by countries and calculating the conversion rate for each country
+It is not clear from the above chart about the number of converted users for each country. Let's visualize this information by grouping the data by countries and calculating the conversion rate for each country
 
 ~~~ r
 > conversion_rate_by_country <- conversion_rate_table %>%
@@ -132,7 +136,7 @@ Again, country doesn't seem to have any correlation with age. China doesn't seem
 
 China users does show some conversion but it is worst compared to other countries.
 
-**Histogram of Age**
+### Histogram of Age
 
 ~~~ r
 qplot(conversion_rate_table$age, geom = "histogram",
@@ -156,7 +160,7 @@ Before analyzing the data, I remove the outliers.
 conversion_rate_table <- data.table(filter(conversion_rate_table, age < 80))
 ~~~
 
-**Logistic Regression**
+### Logistic Regression
 
 The goal is to improve the conversion rate and predict if an user will convert. This is a case of binary classification so I opt for logistic regression. I will also generate decision trees since it might help in presenting a clearer analysis for the marketing team.
 
@@ -196,7 +200,7 @@ AIC: 25700
 Number of Fisher Scoring iterations: 10
 ~~~
 
-The summary suggests that all the columns (note that for factor columns like source and country, each value is used as a dummy column) except for source=SEO are statistically significant.
+The summary suggests that all the variables (note that for factor columns like *source* and *country*, each value is used as a dummy column) except for source=SEO are statistically significant.
 I will now generate the confusion matrix and calculate the error rate.
 
 ~~~ r
@@ -212,12 +216,12 @@ glm.pred      0      1
 [1] 0.01381097
 ~~~
 
-We get an error rate of 1.38% which is an improvement over the null classifier. (_Note:_ I have used 0.5 as the probability threshold to predict the class. Ideally, I would generate a ROC curve to generate an optimal threshold. For my work on using the ROC, check these posts.)
+We get an error rate of 1.38% which is an improvement over the classifier that labels all users as non-converted. (_Note:_ I have used 0.5 as the probability threshold (cut off) to predict the class. Ideally, I would generate a ROC curve to generate an optimal threshold.)
 
 To validate this error rate, I will re-generate the model using a validation set (by using 2/3 of the data for traning the model and the rest to test it) and also using a 10-fold cross validation.
 
 ~~~ r
-> #validate set
+> #validation set
 > set.seed(17)
 > train <- sample(nrow(conversion_rate_table), 2 * (nrow(conversion_rate_table)/3))
 > glm.train.model <- glm(converted ~ ., data = conversion_rate_table, subset = train, family = binomial)
@@ -313,9 +317,9 @@ The error is slight worse over our previous models but the model now only has 2 
 The negative coefficient for _new\_user1_ (1 indicating the dummy column for _new\_user_=1) suggests that new users are less likely to convert. Also, the user is more likely to convert if he/she has visited more pages.
 
 
-**Decision Trees**
+### Decision Trees
 
-Decision trees are a better way to communicate a predictive model to the marketing team. We will build a random forest and verify the importance of the variables.
+Decision trees are a better way to communicate a predictive model to the marketing team. I first build a random forest and verify the importance of the variables.
 
 ~~~ r
 > rf.model <- randomForest(y=conversion_rate_table[train,]$converted,
@@ -349,11 +353,11 @@ Confusion matrix:
 
 ![Random Forest Model 1](/data-analysis/assets/conversion-rate-rf-model-1.png)
 
-The OOB error rate is 1.44% which is an improvement over our logistic regression models. From the variable importance plots, it is clear that _total\_visited\_pages_ is most important.
+The OOB and test error rate is around 1.44% which slightly worse than our logistic regression models. From the variable importance plots, it is clear that _total\_visited\_pages_ is most important.
 
-Now, one could make the argument that total pages visited is not as valuable since an user converting will likely visit more pages anyway. Since there is a huge difference between *total_pages_visited* and other columns in the charts, I will rebuild the random forest model excluding that column to identify other important columns.
+Now, one could make the argument that total pages visited is not as valuable since an user converting will likely visit more pages anyway. Since there is a huge difference between *total_pages_visited* and other variables in the charts, I will rebuild the random forest model excluding that column to identify other important columns.
 
-I also use class weights to give preference to converted data since we comparatively fewer converted data.
+I also use class weights make up for the fact that the data is heavily unbalance and have the model select more of the converted data.
 
 ~~~ r
 > rf_model_2 <- randomForest(y=conversion_rate_table[train,]$converted,
@@ -392,7 +396,7 @@ As expected, *new_user* is the next important variable followed by *age* and *co
 
 The error rate is worse but I am only interested in importance of variables.
 
-We now plot the partial dependence plots for each of these variables to understand the influence of thier values.
+We now plot the partial dependence plots for each of these variables to understand the influence of their values.
 
 ~~~ r
 
@@ -408,8 +412,6 @@ We now plot the partial dependence plots for each of these variables to understa
 
 
 ![Partial Dependence Plots](/data-analysis/assets/conversion-rate-dependence-plots.png)
-
-*Notes:*
 
 * Users from Germany have a better conversion rate over other countries. Users from China have the worst conversion rates.
 * Old users convert more than new users.
@@ -438,13 +440,11 @@ Based on the analysis, I can recommend the following for the marketing team.
 
 * Users from China have very poor conversion rate. The site must do better to target these users and come up with content/features to appeal to the Chinese users. We should also investigate if we are lacking in internationalization features for China.
 
-* While the younger users do fine, we seem to be losing the older users. We need to identify the causes and improve our site convert the older users. Are older users converting less because the UX is not intuitive?
+* While the younger users do fine, we seem to be losing the older users. Are older users converting less because the UX is not intuitive?
 
 * Older accounts have a better conversion rate. We can target the new users with promotional emails and ad campaigns to drive them more towards our site.
 
-* If user has visited many pages and hasn't converted yet then we should use similar targeting features and influence them to convert.
+* If an user has visited many pages and hasn't converted yet then we should use similar targeting features and influence them to convert.
 
 * Users from Germany and younger users do very well on out site and we should target ad campaigns to attract younger users and new users from Germany.
 
-
-[Go to Top](#challenge-description)

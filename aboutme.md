@@ -1,16 +1,10 @@
 ---
 layout: page
 title: About me
-subtitle: Why you'd want to go on a date with me
+subtitle:
 ---
 
-My name is Inigo Montoya. I have the following qualities:
+My name is Sebastin Kolman. I have a Ph.D. in Computer Science with specialization in Data Visualization.  I am a software engineer with many years of experience in building and managing web applications.
+I am open to opportunities in Data Science.
 
-- I rock a great mustache
-- I'm extremely loyal to my family
-
-What else do you need?
-
-### my history
-
-To be honest, I'm having some trouble remembering right now, so why don't you just watch [my movie](http://en.wikipedia.org/wiki/The_Princess_Bride_%28film%29) and it will answer **all** your questions.
+If you would like to connect or know more about my experience use the links in the footer.
