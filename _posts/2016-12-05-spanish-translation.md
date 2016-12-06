@@ -31,7 +31,7 @@ You are asked to:
 * If you identified what was wrong, design an algorithm that would return FALSE if the same problem is happening in the future and TRUE if everything is good and the results can be trusted.
 
 ## Data
-We have 2 tables in csv files. The 2 tables are:
+We have 2 tables in [csv files](https://github.com/sabman83/data-analysis/tree/master/spanish-translation/data). The 2 tables are:
 
 *test_table* : general information about the test results
 
