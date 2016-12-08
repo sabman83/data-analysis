@@ -1,5 +1,5 @@
 glm.model <- glm(converted~.,data = conversion_rate_table, family = binomial)
-summary(glm.fit)
+summary(glm.model)
 glm.probs = predict(glm.model, type="response")
 glm.pred = rep(0, nrow(conversion_rate_table))
 glm.pred[glm.probs>0.5] = 1
