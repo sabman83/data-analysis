@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Conversion Rate
-tags: [random-forests, logistic-regression]
+tags: [random-forests, logistic-regression, feature-selection]
 ---
 
 ## Contents
@@ -279,9 +279,36 @@ The error rate is slightly better when using a validation set.
 [10] 0.01382362
 ~~~
 
-Again, the error is about the same at 1.38%.
+Again, the error is about the same at 1.38%. Notice that I have been using 0.5 as the cut-off. I will now use the ROCR library to determine the optimal cut-off.
 
-We now perform feature selection by performing lasso regression on the logisitic model and identify variables with non-zero coefficients.
+~~~ r
+> pred <- prediction(glm.probs,conversion_rate_table$converted)
+> perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+> perf <- performance(pred, "cost")
+> pred@cutoffs[[1]][which.min(perf@y.values[[1]])]
+   223665
+0.4912687
+~~~
+
+The optimal cut-off is close to 0.5. If we prefer to not lose out on potential customers, then we can make false negatives twice as costly as false positives.
+
+~~~ r
+> cost.perf = performance(pred, "cost", cost.fp = 2, cost.fn = 1)
+>
+> pred@cutoffs[[1]][which.min(cost.perf@y.values[[1]])]
+   147573
+0.3500611
+
+> glm.pred = rep(0, nrow(conversion_rate_table))
+> glm.pred[glm.probs>0.35] = 1
+> 100 * (1 - mean(glm.pred == conversion_rate_table$converted) )
+[1] 1.465854
+~~~
+
+This gives us a cut-off of 0.35. This increases our error rate but we are less likely to miss out on potential conversions.
+
+
+I will now perform lasso regression on the logisitic model and identify variables with non-zero coefficients for feature selection.
 
 
 ~~~ r
