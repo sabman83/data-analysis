@@ -1,5 +1,5 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(data.table, ggplot2, boot, dplyr, leaps, glmnet, rpart, randomForest, rpart.plot)
+pacman::p_load(data.table, ggplot2, boot, dplyr, leaps, glmnet, ROCR rpart, randomForest, rpart.plot)
 
 
 setwd("./conversion-rate/")
@@ -38,8 +38,8 @@ conversion_rate_by_country <- conversion_rate_table %>%
   + summarise(conversion_rate = mean(converted))
 
 ggplot(data = conversion_rate_by_country, aes(x=country, y=conversion_rate))
-  + geom_bar(stat = "identity", aes(fill=country)) 
-  + labs(x="Country", y = "Conversion Rate") 
+  + geom_bar(stat = "identity", aes(fill=country))
+  + labs(x="Country", y = "Conversion Rate")
   + ggtitle("Conversion Rate by Country") + theme(plot.title = element_text(face = "bold"))
 
 #remove outliers

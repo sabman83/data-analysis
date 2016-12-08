@@ -26,6 +26,14 @@ for (i in 1:10) {
 
 cv.error.10
 
+#rocr
+perf <- performance(pred, "cost")
+pred@cutoffs
+pred@cutoffs[[1]][which.min(perf@y.values[[1]])]
+
+cost.perf = performance(pred, "cost", cost.fp = 1, cost.fn = 2)
+pred@cutoffs[[1]][which.min(cost.perf@y.values[[1]])]
+
 #Ridge and Lasso Regression
 
 set.seed(17)
