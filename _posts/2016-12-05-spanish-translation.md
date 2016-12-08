@@ -28,7 +28,6 @@ You are asked to:
 
 * Confirm that the test is actually negative. That is, it appears that the old version of the site with just one translation across Spain and LatAm performs better
 * Explain why that might be happening. Are the localized translations really worse?
-* If you identified what was wrong, design an algorithm that would return FALSE if the same problem is happening in the future and TRUE if everything is good and the results can be trusted.
 
 ## Data
 We have 2 tables in [csv files](https://github.com/sabman83/data-analysis/tree/master/spanish-translation/data). The 2 tables are:
@@ -195,6 +194,48 @@ We earlier saw the differences in the conversion rate between the test and contr
 ~~~
 
 The p-value for each country indicates that the differences are not significant to draw any conclusions.
+
+Then why did the team conclude that the conversion rates were worse for localized translations? I will now compare the overall conversion rates for test and the control group.
+
+~~~ r
+> test_vs_control <- t.test(translation_table_excluding_spain$conversion[translation_table_excluding_spain$test==1], translation_table_excluding_spain$conversion[translation_table_excluding_spain$test==0])
+> test_vs_control
+
+	Welch Two Sample t-test
+
+data:  translation_table_excluding_spain$conversion[translation_table_excluding_spain$test ==  and translation_table_excluding_spain$conversion[translation_table_excluding_spain$test ==     1] and     0]
+t = -7.3539, df = 385260, p-value = 1.929e-13
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.006181421 -0.003579837
+sample estimates:
+ mean of x  mean of y
+0.04341116 0.04829179
+~~~
+
+The overall conversion rate for test group is 4.3% whereas for control group is 4.8%. That's a drop of around 10%. The p-value indicates that this difference is significant that we can reject our null hypothesis.
+
+This indicates a bias in the selection process for the control group. Given that when we look at the data grouped by country we don't observe a sginificant difference , there is likely a bias in the selection by country.
+
+We can verify the bias by building a decision tree to classify test group. Now, if the data was split evenly between test and control groups then we shouldn't see any splits on the tree or they should be at least close to even.
+
+~~~ r
+> tree <- rpart(test~., translation_table_excluding_spain, control = rpart.control(maxdepth = 2))
+> tree
+n= 401085
+
+node), split, n, deviance, yval
+      * denotes terminal node
+
+1) root 401085 99692.820 0.5379757
+  2) country=Bolivia,Chile,Colombia,Costa Rica,Ecuador,El Salvador,Guatemala,Honduras,Mexico,Nicaragua,Panama,Paraguay,Peru,Venezuela 350218 87553.970 0.4987693 *
+  3) country=Argentina,Uruguay 50867  7894.097 0.8079108 *
+~~~
+
+For countries except Argentina and Uruguay, the data split is about 49% which is close to even. But for Argentina and Uruguay, 80% of the users were part of the test group. So there is a clear selection bias here which lead to the incorrect conclusions by the team.
+
+
+
 
 ## Conclusion
 
