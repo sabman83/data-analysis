@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Spanish Translation A/B Test
-tags: [t-test, ab-testing]
+tags: [t-test, ab-testing, selection-bias]
 ---
 
 ## Contents
@@ -239,6 +239,6 @@ For countries except Argentina and Uruguay, the data split is about 49% which is
 
 ## Conclusion
 
-The hypothesis that the test conversion rates were worse cannot be proved. The conversion rates were better in some countries but the overall differences are not siginificant enough to validate the use of localized translations.
+The hypothesis that the test conversion rates were worse cannot be proved. The conversion rates were better in some countries but the differences are not siginificant enough to validate the use of localized translations.
 
 It might be worth considering to run these tests for a long period of time since the conversion rate has not been affected significantly.
