@@ -27,8 +27,6 @@ The data contains information about users browsing a paritcular site. It contain
 ## Data
 ---
 
-The data is available [here](https://github.com/sabman83/data-analysis/raw/gh-pages/conversion-rate/data/conversion_data.csv){:target="_blank"}.
-
 Columns:
 
 * _country_ : user's country based on the IP address

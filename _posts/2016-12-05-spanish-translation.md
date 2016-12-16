@@ -30,7 +30,7 @@ You are asked to:
 * Explain why that might be happening. Are the localized translations really worse?
 
 ## Data
-We have 2 tables in [csv files](https://github.com/sabman83/data-analysis/tree/master/spanish-translation/data). The 2 tables are:
+We have 2 tables:
 
 *test_table* : general information about the test results
 
