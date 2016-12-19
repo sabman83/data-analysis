@@ -25,17 +25,16 @@ employees_hired_data <- rename(employees_hired_data, date = join_date)
 
 employees_hired_quit_data <- merge(employees_hired_data,employees_quit_data,by = c("company_id","date"), all=TRUE) %>%
   arrange(company_id, date)
+employees_hired_quit_data <- filter(employees_hired_quit_data, !is.na(date))
 
-employees_hired_quit_data[is.na(employees_hired_quit_data$num_of_hired),]$num_of_hired <- 0
-employees_hired_quit_data[is.na(employees_hired_quit_data$num_of_quitters),]$num_of_quitters <- 0
-
-employees_hired_quit_data <- mutate(employees_hired_quit_data, diff = num_of_hired - num_of_quitters)
-
-employees_hired_quit_data <- employees_hired_quit_data %>%
+head_count_data <- merge(head_count_data, employees_hired_quit_data, by = c("company_id", "date"), all = TRUE)
+head_count_data <- mutate(head_count_data,num_of_hired=replace(num_of_hired,is.na(num_of_hired),0))
+head_count_data <- mutate(head_count_data,num_of_quitters=replace(num_of_quitters,is.na(num_of_quitters),0))
+head_count_data <- mutate(head_count_data, diff = num_of_hired - num_of_quitters)
+head_count_data <- head_count_data %>%
   group_by(company_id) %>%
   arrange(date) %>%
   mutate(head_count = cumsum(diff))
-
 
 
 
