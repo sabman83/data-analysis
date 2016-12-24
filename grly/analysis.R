@@ -48,4 +48,32 @@ summary(best_user_details)
 
 
 #Separate from the data analysis, it would be great to hear your thoughts on the Grammarly product and what data-related projects/ideas you think we should be pursuing.
+grammarly_table <- data.table(grammarly)
+grammarly_table$date_time <- as.Date(grammarly_table$date_time)
+
+sort(unique(grammarly_table$first_utm_source))
+grammarly_table[first_utm_source == "[brand1, brand1]"]$first_utm_source <- "brand1"
+grammarly_table[first_utm_source == "[brand1,+brand1]"]$first_utm_source <- "brand1"
+
+
+users_info = data.table(user_id=unique(grammarly_table$attributed_to))
+users_info$worst_user <- rep(0,nrow(users_info))
+users_info$best_user <- rep(0,nrow(users_info))
+users_info$first_utm_source <- rep(NA_character_,nrow(users_info))
+best_users <- data.table(best_users)
+setkeyv(best_users,c("attributed_to"))
+setkeyv(users_info,c("user_id"))
+users_info[best_users, best_user:=1]
+worst_users <- data.table(worst_users)
+setkeyv(worst_users, c("attributed_to"))
+users_info[worst_users, worst_user:=1]
+users_info %>% filter(best_user==1 & worst_user==1)
+users_to_source <- grammarly_table %>% distinct(attributed_to, first_utm_source)  %>% filter(!is.na(first_utm_source))
+users_info <- merge(users_info, users_to_source, by.x = "user_id", by.y = "attributed_to", all.x = TRUE)
+users_info[,first_utm_source.x:=NULL]
+users_info <- rename(users_info, first_utm_source =  first_utm_source.y)
+summary(users_info)
+
+
+
 
