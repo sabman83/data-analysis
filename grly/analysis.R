@@ -23,6 +23,8 @@ Who are considered best users?,Who are worst users?
  - Then find distribution of these users by source.
  - evaluate if the difference is significant enough. Should this be a t-test?
  - what about the time of the day? and the day?
+ - possible have to do anova for comparing different means (No to ANOVA, which assumes a normally distributed outcome variable (among other things))
+ - instead of saying best vs worst , keep the num of visits and use that information. This way you can do anova as well
 
 users_visiting_grammalry <-
 + grammarly_table %>%
@@ -74,6 +76,25 @@ users_info[,first_utm_source.x:=NULL]
 users_info <- rename(users_info, first_utm_source =  first_utm_source.y)
 summary(users_info)
 
+source_info = users_info %>% group_by(first_utm_source) %>% summarise(worst_convertes = mean(worst_user), best_converters=mean(best_user), total_users=n())
 
+older_users <- grammarly_table[used_first_time_today==TRUE & date_time < as.Date("2016-02-17")]
 
+avg_days_by_source <- users_info %>% group_by(first_utm_source) %>% summarise(avg_days = mean(num_of_days))
+avg_days_by_source_older <- users_info[older_users] %>% group_by(first_utm_source) %>% summarise(avg_days = mean(num_of_days))
+avg_days_by_source <- older_users_info %>% group_by(first_utm_source) %>% summarise(avg_days_spent = mean(num_of_days), num_of_users = n())
+boxplot(older_users_info$num_of_days~older_users_info$first_utm_source)
+boxplot(older_users_info$num_of_days~older_users_info$first_utm_source, col=rainbow(21))
+aov_cont <- aov(older_users_info$num_of_days~older_users_info$first_utm_source)
+summary(aov_cont)
+tuk<- TukeyHSD(aov_cont)
+tuk
+tuk_results <- data.table(tuk$`older_users_info$first_utm_source`)
+View(tuk_results)
+avg_days_by_source <- older_users_info %>% group_by(first_utm_source) %>% summarise(avg_days_spent = mean(num_of_days), num_of_users = n(), stdDev = sd(num_of_days), num_of_best_users = sum(best_user), num_of_worst_users = sum(worst_user))
+install.packages("PMCMR")
+require(PMCMR)
+posthoc.kruskal.nemenyi.test(users_info$num_of_days~users_info$first_utm_source, dist = "Tukey")
+phoc_results_1 <- posthoc.kruskal.nemenyi.test(g=users_info$first_utm_source, x= users_info$num_of_days, p.adjust.methods="none")
+summary(phoc_results_1)
 
