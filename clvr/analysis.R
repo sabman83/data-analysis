@@ -33,3 +33,15 @@ summary(clvr.glm.model)
 
 
 
+#PART 2. EXPERIMENT DESIGN
+#A product manager wants to make a change to a piece of software that all of the physicians al- ready possess.
+#The change will notify the physician whenever a prescription is about to run out.
+#How would you set up this change to know whether it had an effect?
+#What metrics would you use to evaluate the change? What are some of the challenges of measurement with this type of change?
+
+- A/B testing
+- feature to indicate if physician overran or not.
+- order history
+- clicked order from reminder
+- if they don't click button and order from phone instead then we wouldn't know.
+
