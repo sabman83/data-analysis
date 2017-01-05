@@ -23,11 +23,10 @@ grly_table$attributed_to <- as.factor(grly_table$attributed_to)
 grly_table$first_utm_source <- as.factor(grly_table$first_utm_source)
 grly_table$fingerprint <- NULL
 grly_table$user_id <- NULL
-parse_date_time("2016-02-01 10:32", orders = "ymd HM")
 grly_table$date_time <- parse_date_time(grly_table$date_time, orders = "ymd HM")
 summary(grly_table)
-grly_table <-  grly_table[!(duplicated(grly_table)),]
 
+grly_table <-  grly_table[!(duplicated(grly_table)),]
 duplicate_rows <- grly_table%>% group_by(attributed_to, date_time) %>% filter(n() > 1)
 View(duplicate_rows)
 indices <- seq(1,nrow(duplicate_rows),2)
@@ -38,7 +37,6 @@ duplicate_rows <- duplicate_rows[indices,]
 View(duplicate_rows)
 nrow(duplicate_rows)
 grly_table <- grly_table%>% group_by(attributed_to, date_time) %>% filter(n() == 1)
-rbind(grly_table,duplicate_rows)
 grly_table <- rbind(grly_table,duplicate_rows)
 nrow(grly_table%>% group_by(attributed_to, date_time) %>% filter(n() > 1))
 
@@ -51,6 +49,7 @@ nrow(grly_table)
 #Exercise
 #Calculate the daily retention curve for users who used the app for the first time on the following dates: Feb 4th, and Feb 10th.
 #Daily retention curve is defined as the % of users from the cohort, who used the product that day
+grly_table <- data.table(grly_table)
 users_visited_on_4th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-04 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-04 23:59:59", tz = "UTC"))
 summary(users_visited_on_4th)
 users_visited_on_10th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-10 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-10 23:59:59", tz = "UTC"))
