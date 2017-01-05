@@ -1,52 +1,95 @@
-#Calculate the daily retention curve for users who used the app for the first time on the following dates: Feb 4th, and Feb 10th.
-#Daily retention curve is defined as the % of users from the cohort, who used the product that day
-grammarly <- stream_in(file("~/Projects/grammarly/data/pings.txt"))
-?
-install.packages("lubridate")
-library(lubridate)
-parse_date_time("2016-02-01 10:32", orders = "ymd HM")
-grammarly$date_time <- parse_date_time(grammarly$date_time, orders = "ymd HM")
-grammarly$first_utm_source <- as.factor(grammarly$first_utm_source)
-
-grammarly_between_4th_and_10th <- filter(grammarly, (as.POSIXct("2016-02-04") <= date_time) & (as.POSIXct("2016-02-10") >= date_time))
-
-
-grammarly_between_4th_and_10th %>%
-+ group_by(date_time) %>%
-+ summarise(daily_retention_curve = ( sum(used_first_time_today == TRUE)/n()) * 100)
+#The file is a JSON representation of "ping" data for an app for the month of February 2016.
+#It has about 4.5M rows, so it is quite big, once you uncompress it.
+#When the app is opened by a user, the app pings the analytics system. There might be multiple pings in a day.
+#The data has 6 columns
+#attributed_to: User id related to the ping. Don't worry about the difference between ids of format 'u:' vs. 'f:'
+#user_id and fingerprint columns can be ignored
+#date_time: timestamp of the ping.
+#used_first_time_today: 'true' if this is the first day of ping from the user. Basically, it indicates the first usage date for the user.
+#first_utm_source: the traffic source of the user.
 
 #Determine if there are any differences in usage based on where the users came from. From which traffic source does the app get its best users? its worst users?
-Who are considered best users?,Who are worst users?
-
- - probably users who came back to the app at least the next (or should it be 2 days or what is x?)
- - maybe get a distribution of users who visit, once, 2 days, 3 days ,etc and then decide what is best.
- - Then find distribution of these users by source.
- - evaluate if the difference is significant enough. Should this be a t-test?
- - what about the time of the day? and the day?
- - possible have to do anova for comparing different means (No to ANOVA, which assumes a normally distributed outcome variable (among other things))
- - instead of saying best vs worst , keep the num of visits and use that information. This way you can do anova as well
-
-users_visiting_grammalry <-
-+ grammarly_table %>%
-+ group_by(attributed_to) %>%
-+ summarise(num_of_days = length(unique(date_time)))
+#Separate from the data analysis, it would be great to hear your thoughts on the Grammarly product and what data-related projects/ideas you think we should be pursuing.
 
 
-worst_users <-
-+ users_visiting_grammalry  %>%
-+ filter(num_of_days < 4) %>%
-+ select(attributed_to)
+#Calculate the daily retention curve for users who used the app for the first time on the following dates: Feb 4th, and Feb 10th.
+#Daily retention curve is defined as the % of users from the cohort, who used the product that day
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(data.table, ggplot2, dplyr, jsonlite, lubridate)
 
-best_users <- users_visiting_grammalry  %>%
-+ filter(num_of_days > 20) %>%
-+ select(attributed_to)
+grammarly <- stream_in(file("~/Projects/grammarly/data/pings.txt"))
+grly_table <- data.table(grammarly)
+grly_table$attributed_to <- as.factor(grly_table$attributed_to)
+grly_table$first_utm_source <- as.factor(grly_table$first_utm_source)
+grly_table$fingerprint <- NULL
+grly_table$user_id <- NULL
+parse_date_time("2016-02-01 10:32", orders = "ymd HM")
+grly_table$date_time <- parse_date_time(grly_table$date_time, orders = "ymd HM")
+summary(grly_table)
+grly_table <-  grly_table[!(duplicated(grly_table)),]
 
-#the above does not take into account that users might have joined in late
-#so we can later filter these users from the main table, and ony include those whose first visit is no later than 4 days before the trial run
+duplicate_rows <- grly_table%>% group_by(attributed_to, date_time) %>% filter(n() > 1)
+View(duplicate_rows)
+indices <- seq(1,nrow(duplicate_rows),2)
+for(i in indices) {
+duplicate_rows[i,]$first_utm_source <- duplicate_rows[i+1,]$first_utm_source
+}
+duplicate_rows <- duplicate_rows[indices,]
+View(duplicate_rows)
+nrow(duplicate_rows)
+grly_table <- grly_table%>% group_by(attributed_to, date_time) %>% filter(n() == 1)
+rbind(grly_table,duplicate_rows)
+grly_table <- rbind(grly_table,duplicate_rows)
+nrow(grly_table%>% group_by(attributed_to, date_time) %>% filter(n() > 1))
 
-best_user_details <- (merge(grammarly_table, best_users, by = "attributed_to")  %>% filter(used_first_time_today == TRUE))
-best_user_details$first_utm_source <- as.factor(best_user_details$first_utm_source)
-summary(best_user_details)
+
+length(unique(grly_table$attributed_to))
+nrow(grly_table)
+
+
+
+#Exercise
+#Calculate the daily retention curve for users who used the app for the first time on the following dates: Feb 4th, and Feb 10th.
+#Daily retention curve is defined as the % of users from the cohort, who used the product that day
+users_visited_on_4th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-04 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-04 23:59:59", tz = "UTC"))
+summary(users_visited_on_4th)
+users_visited_on_10th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-10 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-10 23:59:59", tz = "UTC"))
+summary(users_visited_on_10th)
+summarise(users_visited_on_10th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
+summarise(users_visited_on_4th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
+
+#Determine if there are any differences in usage based on where the users came from. From which traffic source does the app get its best users? its worst users?
+#Who are considered best users?,Who are worst users?
+
+ #- probably users who came back to the app at least the next (or should it be 2 days or what is x?)
+ #- maybe get a distribution of users who visit, once, 2 days, 3 days ,etc and then decide what is best.
+ #- Then find distribution of these users by source.
+ #- evaluate if the difference is significant enough. Should this be a t-test?
+ #- what about the time of the day? and the day?
+ #- possible have to do anova for comparing different means (No to ANOVA, which assumes a normally distributed outcome variable (among other things))
+ #- instead of saying best vs worst , keep the num of visits and use that information. This way you can do anova as well
+
+#users_visiting_grammalry <-
+#+ grammarly_table %>%
+#+ group_by(attributed_to) %>%
+#+ summarise(num_of_days = length(unique(date_time)))
+
+
+#worst_users <-
+#+ users_visiting_grammalry  %>%
+#+ filter(num_of_days < 4) %>%
+#+ select(attributed_to)
+
+#best_users <- users_visiting_grammalry  %>%
+#+ filter(num_of_days > 20) %>%
+#+ select(attributed_to)
+
+##the above does not take into account that users might have joined in late
+##so we can later filter these users from the main table, and ony include those whose first visit is no later than 4 days before the trial run
+
+#best_user_details <- (merge(grammarly_table, best_users, by = "attributed_to")  %>% filter(used_first_time_today == TRUE))
+#best_user_details$first_utm_source <- as.factor(best_user_details$first_utm_source)
+#summary(best_user_details)
 
 
 #Separate from the data analysis, it would be great to hear your thoughts on the Grammarly product and what data-related projects/ideas you think we should be pursuing.
