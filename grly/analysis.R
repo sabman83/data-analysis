@@ -24,9 +24,14 @@ grly_table$first_utm_source <- as.factor(grly_table$first_utm_source)
 grly_table$fingerprint <- NULL
 grly_table$user_id <- NULL
 grly_table$date_time <- parse_date_time(grly_table$date_time, orders = "ymd HM")
+grly_table$date <- as.Date(grly_table$date_time)
 summary(grly_table)
 
+#Remove duplicate rows
 grly_table <-  grly_table[!(duplicated(grly_table)),]
+
+#still some duplicates found for a given user and date-time. They had different sources.
+#Fixed it by using the row which had a source. the source was either set or was null.
 duplicate_rows <- grly_table%>% group_by(attributed_to, date_time) %>% filter(n() > 1)
 View(duplicate_rows)
 indices <- seq(1,nrow(duplicate_rows),2)
@@ -36,26 +41,52 @@ duplicate_rows[i,]$first_utm_source <- duplicate_rows[i+1,]$first_utm_source
 duplicate_rows <- duplicate_rows[indices,]
 View(duplicate_rows)
 nrow(duplicate_rows)
-grly_table <- grly_table%>% group_by(attributed_to, date_time) %>% filter(n() == 1)
+grly_table <- grly_table%>% group_by(attributed_to, date_time) %>% filter(n() == 1) #TODO: better, faster way to filter out this data
 grly_table <- rbind(grly_table,duplicate_rows)
 nrow(grly_table%>% group_by(attributed_to, date_time) %>% filter(n() > 1))
-
 
 length(unique(grly_table$attributed_to))
 nrow(grly_table)
 
-
+#ensuring that true and false are assigned correctly
+qdata <- grly_table %>% group_by(attributed_to, date) %>% filter(!(sum(used_first_time_today) == n() || sum(used_first_time_today) == 0))
+nrow(qdata)
 
 #Exercise
 #Calculate the daily retention curve for users who used the app for the first time on the following dates: Feb 4th, and Feb 10th.
 #Daily retention curve is defined as the % of users from the cohort, who used the product that day
-grly_table <- data.table(grly_table)
-users_visited_on_4th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-04 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-04 23:59:59", tz = "UTC"))
-summary(users_visited_on_4th)
-users_visited_on_10th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-10 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-10 23:59:59", tz = "UTC"))
-summary(users_visited_on_10th)
-summarise(users_visited_on_10th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
-summarise(users_visited_on_4th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
+#grly_table <- data.table(grly_table)
+#users_visited_on_4th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-04 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-04 23:59:59", tz = "UTC"))
+#summary(users_visited_on_4th)
+#users_visited_on_10th <- filter(grly_table, date_time >= (as.POSIXct("2016-02-10 00:00:00", tz = "UTC")) & date_time <= as.POSIXct("2016-02-10 23:59:59", tz = "UTC"))
+#summary(users_visited_on_10th)
+#summarise(users_visited_on_10th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
+#summarise(users_visited_on_4th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
+#retention_data <- grly_table[!duplicated(grly_table, by = c(1,5))]
+#users_4th <- retention_data %>% filter(date == as.Date("2016-02-04"))
+#summarise(users_4th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
+#View(users_4th)
+#nrow(users_4th)
+#length(unique(users_4th$attributed_to))
+#users_10th <- retention_data %>% filter(date == as.Date("2016-02-10"))
+#summarise(users_10th, daily_retention_curve = (sum(used_first_time_today)/n() * 100))
+#length(unique(users_10th$attributed_to)) == nrow(users_10th)
+retention_curve_for_4th <- grly_table %>% group_by(date) %>% summarise(retention_rate = length(intersect(new_users_on_4th,unique(attributed_to))) / length(unique(attributed_to)))
+View(retention_curve_for_4th)
+plot(retention_curve_for_4th)
+retention_curve_for_4th <- grly_table %>% group_by(date) %>% summarise(retention_rate = length(intersect(new_users_on_4th,unique(attributed_to))) / length(new_users_on_4th))
+plot(retention_curve_for_4th)
+new_users_on_10th <- grly_table %>% filter(date == as.Date("2016-02-10") & used_first_time_today == TRUE)
+new_users_on_10th <-  unique(new_users_on_10th$attributed_to)
+retention_curve_for_10th <- grly_table %>% group_by(date) %>% summarise(retention_rate = length(intersect(new_users_on_10th,unique(attributed_to))) / length(new_users_on_10th))
+plot(retention_curve_for_10th)
+
+retention_curve <- retention_curve_for_4th
+retention_curve$retention_rate_on_4th <- retention_curve_for_4th$retention_rate
+retention_curve$retention_rate_on_10th <- retention_curve_for_10th$retention_rate
+melted_retention_curve <- melt(retention_curve, id="date")
+ggplot(data = melted_retention_curve, aes(x=date,y= value, colour = variable)) +geom_line()
+
 
 #Determine if there are any differences in usage based on where the users came from. From which traffic source does the app get its best users? its worst users?
 #Who are considered best users?,Who are worst users?
@@ -127,6 +158,33 @@ avg_days_by_source_older <- users_info[older_users] %>% group_by(first_utm_sourc
 avg_days_by_source <- older_users_info %>% group_by(first_utm_source) %>% summarise(avg_days_spent = mean(num_of_days), num_of_users = n())
 boxplot(older_users_info$num_of_days~older_users_info$first_utm_source)
 boxplot(older_users_info$num_of_days~older_users_info$first_utm_source, col=rainbow(21))
+
+par(mar=c(5,15,1,1))
+boxplot(older_users_filtered_by_major_sources$daily_visit_rate~older_users_filtered_by_major_sources$first_utm_source, col=rainbow(21), las=2, horizontal = TRUE)
+
+ggplot(data = visit_rate_by_source, aes(x=first_utm_source, y=(avg_visit_rate))) + geom_point(aes(size=num_of_users, label = first_utm_source))
+
+
+install.packages("nortest")
+library(nortest)
+ad.test(older_users$daily_visit_rate)
+
+
+kruskal.test(daily_visit_rate~first_utm_source, data = older_users_filtered_by_major_sources)
+require(PMCMR)
+
+phoc_dunn_results <- posthoc.kruskal.dunn.test(older_users_filtered_by_major_sources$daily_visit_rate~older_users_filtered_by_major_sources$first_utm_source)
+summary(phoc_dunn_results)
+phoc_dunn_matrix <- phoc_dunn_results$p.value
+for(rname in rownames(phoc_dunn_matrix)) {
+for(cname in colnames(phoc_dunn_matrix)) {
+if((!is.na(phoc_dunn_matrix[rname,cname])) & (phoc_dunn_matrix[rname,cname] < 0.05)) {
+print (paste0(rname, " - ", cname, " => " , phoc_dunn_matrix[rname, cname]))
+}
+}
+}
+
+
 aov_cont <- aov(older_users_info$num_of_days~older_users_info$first_utm_source)
 summary(aov_cont)
 tuk<- TukeyHSD(aov_cont)
