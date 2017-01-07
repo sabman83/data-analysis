@@ -149,6 +149,22 @@ users_info[,first_utm_source.x:=NULL]
 users_info <- rename(users_info, first_utm_source =  first_utm_source.y)
 summary(users_info)
 
+users_info <- grly_table %>% group_by(attributed_to) %>% arrange(date) %>% slice(1) %>% ungroup
+View(users_info)
+nrow(users_info) == length(unique(users_info$attributed_to))
+grly_table <- ungroup(grly_table)
+sources_table <- grly_table %>% select(attributed_to,first_utm_source)  %>% distinct(attributed_to, first_utm_source)
+pings_info <- grly_table %>% group_by(attributed_to) %>% summarise(num_of_pings = length(unique(date_time)), num_of_days = length(unique(date)))
+pings_info$avg_pings_per_day = pings_info$num_of_pings/pings_info$num_of_days
+users<-merge(users_info,pings_info,by = "attributed_to",all = TRUE)
+users$avg_pings_per_day <- round(users$avg_pings_per_day, digits = 2)
+hist(users$avg_pings_per_day,  breaks = 100)
+older_users <- users %>% filter(date < as.Date("2016-02-27"))
+users$days_since_joined <- ifelse((users$used_first_time_today == TRUE), (as.Date("2016-03-01") - users$date ),29)
+users$daily_visit_rate <- users$num_of_days / users$days_since_joined
+summary(users)
+visit_rate_by_source <- older_users %>%  filter(!is.na(first_utm_source))%>% group_by(first_utm_source) %>% summarise(mean(daily_visit_rate))
+
 source_info = users_info %>% group_by(first_utm_source) %>% summarise(worst_convertes = mean(worst_user), best_converters=mean(best_user), total_users=n())
 
 older_users <- grammarly_table[used_first_time_today==TRUE & date_time < as.Date("2016-02-17")]
