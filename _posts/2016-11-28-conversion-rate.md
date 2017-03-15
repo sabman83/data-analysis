@@ -91,14 +91,14 @@ ggplot(conversion_rate_table, aes(x = age, y = total_pages_visited))
 ![Total Pages Visted vs Age](/data-analysis/assets/pages-visited-vs-age.png)
 
 There are two outliers having an age of over 100. We can safely assume that this is incorrect data and ignore them.
-Also, I notice that beyond a certain age all the users converted. This age threshold is marked by the vertical line at 61.
+Also, I notice that beyond a certain age none of the users converted. This age threshold is marked by the vertical line at 61.
 
 ~~~ r
 > nrow(filter(conversion_rate_table, converted==1, age>61, age<100))
 [1] 0
 ~~~
 
-Users who have visited 20 or more pages also defintely converted.
+Users who have visited 20 or more pages defintely converted.
 
 ~~~ r
 nrow(filter(conversion_rate_table, converted==0, total_pages_visited>20))
@@ -382,7 +382,7 @@ The OOB and test error rate is around 1.44% which slightly worse than our logist
 
 Now, one could make the argument that total pages visited is not as valuable since an user converting will likely visit more pages anyway. Since there is a huge difference between *total_pages_visited* and other variables in the charts, I will rebuild the random forest model excluding that column to identify other important columns.
 
-I also use class weights make up for the fact that the data is heavily unbalance and have the model select more of the converted data.
+I also use class weights make up for the fact that the data is heavily unbalanced and have the model select more of the converted data.
 
 ~~~ r
 > rf_model_2 <- randomForest(y=conversion_rate_table[train,]$converted,
